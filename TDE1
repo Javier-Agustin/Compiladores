@@ -9,10 +9,6 @@
 
 // Constantes para pinos
 const int PINO_LED_EXTERNO = 6; // LED externo conectado ao pino 6
-const int PINO_BTN_0 = 2;        // Botão para entrada 0
-const int PINO_BTN_1 = 3;        // Botão para entrada 1
-const int PINO_BTN_RESET = 4;    // Botão para resetar
-const int PINO_BTN_MEFD = 5;     // Botão para trocar MEFD
 
 // Constantes para os estados das máquinas
 const int MAX_ESTADOS = 5;
@@ -22,9 +18,9 @@ int MEFD_atual = 0;        // MEFD atual (0-4)
 int estado_atual = 0;      // Estado atual da MEFD
 bool entrada_completa = false; // Flag para indicar se a entrada está completa
 
-/***************************************************************************/
+/*/
 /*                Tabelas de transição e estados de aceitação              */
-/***************************************************************************/
+
 // MEFD-0: L0 = {x | x ∈ {0,1}* e cada 0 em x é seguido por pelo menos um 1}
 int transicao_MEFD0[3][2] = {
   {1, 0}, // q0: com 0 → q1, com 1 → q0
@@ -67,16 +63,11 @@ int transicao_MEFD4[3][2] = {
 };
 bool aceitando_MEFD4[3] = {false, true, false};
 
-/***************************************************************************/
+/*/
 /*                               Configuração                             */
-/***************************************************************************/
 void setup() {
   // Configuração dos pinos
   pinMode(PINO_LED_EXTERNO, OUTPUT);  // Configura o LED externo
-  pinMode(PINO_BTN_0, INPUT_PULLUP);
-  pinMode(PINO_BTN_1, INPUT_PULLUP);
-  pinMode(PINO_BTN_RESET, INPUT_PULLUP);
-  pinMode(PINO_BTN_MEFD, INPUT_PULLUP);
 
   // Inicialização da comunicação serial
   Serial.begin(9600);
@@ -86,49 +77,10 @@ void setup() {
   menuInicial();
 }
 
-/***************************************************************************/
+/*/
 /*                               Loop                                      */
-/***************************************************************************/
+
 void loop() {
-  // Verifica botão para mudar MEFD
-  if (digitalRead(PINO_BTN_MEFD) == LOW) {
-    delay(50); // Anti-rebote
-    if (digitalRead(PINO_BTN_MEFD) == LOW) {
-      while (digitalRead(PINO_BTN_MEFD) == LOW); // Espera soltar o botão
-      MEFD_atual = (MEFD_atual + 1) % 5;
-      resetarMaquina();
-      imprimirInformacoesMEFD();
-      menuInicial();
-    }
-  }
-
-  // Verifica botão de reset
-  if (digitalRead(PINO_BTN_RESET) == LOW) {
-    delay(50); // Anti-rebote
-    if (digitalRead(PINO_BTN_RESET) == LOW) {
-      while (digitalRead(PINO_BTN_RESET) == LOW); // Espera soltar o botão
-      resetarMaquina();
-      Serial.println("Máquina resetada. Entre com uma nova sequência.");
-    }
-  }
-
-  // Processa entrada de 0
-  if (digitalRead(PINO_BTN_0) == LOW) {
-    delay(50); // Anti-rebote
-    if (digitalRead(PINO_BTN_0) == LOW) {
-      while (digitalRead(PINO_BTN_0) == LOW); // Espera soltar o botão
-      processarEntrada(0);
-    }
-  }
-
-  // Processa entrada de 1
-  if (digitalRead(PINO_BTN_1) == LOW) {
-    delay(50); // Anti-rebote
-    if (digitalRead(PINO_BTN_1) == LOW) {
-      while (digitalRead(PINO_BTN_1) == LOW); // Espera soltar o botão
-      processarEntrada(1);
-    }
-  }
 
   // Se a entrada estiver completa, verifique a aceitação
   if (entrada_completa) {
@@ -157,9 +109,18 @@ void loop() {
   }
 }
 
-/***************************************************************************/
+/*/
 /*                        Funções Auxiliares                               */
-/***************************************************************************/
+
+
+void piscarLED(int vezes) {
+  for (int i = 0; i < vezes; i++) {
+    digitalWrite(PINO_LED_EXTERNO, HIGH);
+    delay(600);
+    digitalWrite(PINO_LED_EXTERNO, LOW);
+    delay(600);
+  }
+}
 void processarEntrada(int entrada) {
   Serial.print("Entrada: ");
   Serial.println(entrada);
@@ -242,15 +203,6 @@ void resetarMaquina() {
   estado_atual = 0;
   entrada_completa = false;
   digitalWrite(PINO_LED_EXTERNO, LOW);
-}
-
-void piscarLED(int vezes) {
-  for (int i = 0; i < vezes; i++) {
-    digitalWrite(PINO_LED_EXTERNO, HIGH);
-    delay(600);
-    digitalWrite(PINO_LED_EXTERNO, LOW);
-    delay(600);
-  }
 }
 
 void imprimirInformacoesMEFD() {
